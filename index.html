@@ -1576,7 +1576,7 @@ function linkMiracleNums(root){
       if(h!==t){const sp=document.createElement("span");sp.innerHTML=h;n.replaceWith(sp)}}
   };
   const cellLink=(td,id)=>{if(td.querySelector("a"))return;td.innerHTML=`<a href="#/ministry/${id}">${td.innerHTML}</a>`};
-  for(const p of root.querySelectorAll("p"))if(/^Only one miracle/.test(p.textContent.trim()))numLinks(p);
+  for(const p of root.querySelectorAll("p"))if(/^(Only one miracle|Miracles in only one book)/.test(p.textContent.trim()))numLinks(p);
   for(const tb of root.querySelectorAll("table")){
     const head=(tb.querySelector("th")||{}).textContent||"";
     const rows=[...tb.querySelectorAll("tr")].filter(tr=>tr.querySelector("td"));
