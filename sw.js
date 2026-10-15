@@ -1,6 +1,6 @@
 /* Study Companion offline support.
    Bump VERSION whenever you upload changed files so visitors get the update. */
-const VERSION = "sc-v25";
+const VERSION = "sc-v26";
 const DATA = "sc-data";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "nt/index.json",
   "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];

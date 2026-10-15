@@ -195,6 +195,7 @@ button.note.mine .lab{color:var(--navy)}
 .tkcard .tkfoot{margin:8px 0 0;font-family:var(--sans);font-size:.85rem;color:var(--muted)}
 .tkopen{background:none;border:1px solid var(--rule);border-radius:999px;color:var(--muted);padding:1px 8px;font-size:.85rem;margin-left:auto;letter-spacing:0;font-weight:400}
 .tkopen.has{color:#fff;background:var(--ribbon);border-color:var(--ribbon)}
+.mnum{font-weight:700;text-decoration:none;border-bottom:1px solid currentColor;padding:0 1px}
 .plansub{font-family:var(--sans);font-size:.95rem;font-weight:600;color:var(--muted);margin:14px 0 8px}
 .plan.withtext{grid-template-columns:1fr}
 .plan .r small{display:block;color:var(--muted);font-size:.88rem}
@@ -1565,6 +1566,27 @@ async function showChapter(id,n,v){
 
 /* ---------- Jesus' Ministry ---------- */
 const KINDCLS=k=>/heal/i.test(k)?"healing":/deliver/i.test(k)?"deliverance":/nature/i.test(k)?"nature":/rais/i.test(k)?"raising":/sign/i.test(k)?"sign":"";
+/* make miracle numbers (1–35) and sign letters (A–J) in the overview tables and footnote tappable */
+function linkMiracleNums(root){
+  if(!root)return;
+  const numLinks=(el)=>{  // every standalone miracle number in el becomes a link
+    const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest("a")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+    const ns=[];while(w.nextNode())ns.push(w.currentNode);
+    for(const n of ns){const t=esc(n.nodeValue);const h=t.replace(/(^|[\s(,;])([1-9]|[12]\d|3[0-5])(?=$|[\s),;.])/g,(m,pre,k)=>`${pre}<a class="mnum" href="#/ministry/m-${k}" aria-label="Miracle ${k}">${k}</a>`);
+      if(h!==t){const sp=document.createElement("span");sp.innerHTML=h;n.replaceWith(sp)}}
+  };
+  const cellLink=(td,id)=>{if(td.querySelector("a"))return;td.innerHTML=`<a href="#/ministry/${id}">${td.innerHTML}</a>`};
+  for(const p of root.querySelectorAll("p"))if(/^Only one miracle/.test(p.textContent.trim()))numLinks(p);
+  for(const tb of root.querySelectorAll("table")){
+    const head=(tb.querySelector("th")||{}).textContent||"";
+    const rows=[...tb.querySelectorAll("tr")].filter(tr=>tr.querySelector("td"));
+    if(head==="Kind")rows.forEach(tr=>{const td=tr.children[1];if(!td)return;
+      td.innerHTML=td.innerHTML.replace(/(^|;\s*)(\d{1,2}|[A-J])\. ([^;<]+)/g,(m,pre,k,title)=>`${pre}<a href="#/ministry/${/\d/.test(k)?"m-"+k:"s-"+k}">${k}. ${title}</a>`)});
+    else if(head==="Gospel")rows.forEach(tr=>{const td=tr.children[tr.children.length-1];if(td)numLinks(td)});
+    else if(head==="Miracle")rows.forEach(tr=>{const td=tr.children[0];if(td&&/^\d+$/.test(td.textContent.trim()))cellLink(td,"m-"+td.textContent.trim())});
+    else if(head==="Sign")rows.forEach(tr=>{const td=tr.children[0];if(td&&/^[A-J]$/.test(td.textContent.trim()))cellLink(td,"s-"+td.textContent.trim())});
+  }
+}
 async function showMinistry(anchor){
   loadingView("ministry",{tab:"bible",slim:true});
   const d=await getJSON("ministry");
@@ -1590,7 +1612,7 @@ async function showMinistry(anchor){
   }
   const nk="ministry";
   h+=`<div class="mynotes"><label for="mNote">My notes on Jesus' ministry <span class="status" id="mnStatus"></span></label><textarea id="mNote">${esc(noteText(nk))}</textarea></div>`;
-  ntv.innerHTML=h;linkify(ntv);wireFigures(ntv);wireNote($("mNote"),nk,$("mnStatus"));
+  ntv.innerHTML=h;linkify(ntv);linkMiracleNums($("mover"));wireFigures(ntv);wireNote($("mNote"),nk,$("mnStatus"));
   scrollToId(anchor);
 }
 
