@@ -129,6 +129,9 @@ nav.tabs .sm{display:none}
 .lifemap{margin:14px 0 18px}.lifemap figcaption{font-family:var(--sans);font-size:.82rem;color:var(--muted);margin-top:4px}
 .reader .v{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:background .2s}
 .reader .v.pressing{background:var(--rose);box-shadow:0 0 0 3px var(--rose)}
+.reader .v.assigned{background:color-mix(in srgb,var(--rose-line) 42%,transparent);box-shadow:-4px 0 0 color-mix(in srgb,var(--rose-line) 42%,transparent),4px 0 0 color-mix(in srgb,var(--rose-line) 42%,transparent);box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.reader .v.assigned.flash{animation:none}
+.plannote{margin:0 0 10px;padding:6px 10px;border-left:3px solid var(--ribbon);background:var(--rose);border-radius:0 6px 6px 0;font-size:.9rem}
 .reader .v.noted sup::after{content:"✎";margin-left:2px;font-size:.9em}
 button.note.mine{width:100%;text-align:left;cursor:pointer;color:var(--ink);font-weight:400;letter-spacing:0;background:var(--tint);border-left-color:var(--navy)}
 button.note.mine .lab{color:var(--navy)}
@@ -517,7 +520,7 @@ figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--r
 
 <footer>
   <p>Free to use. No sign-up, no ads, no tracking. Scripture: American Standard Version (1901), public domain.</p>
-  <p><button id="privacyLink" type="button">Privacy</button> · <button id="installLink" type="button">Add to your home screen</button> · <button id="sizeLink" type="button">Display</button></p>
+  <p><button id="privacyLink" type="button">Privacy</button> · <button id="installLink" type="button">Add to your home screen</button> · <button id="sizeLink" type="button">Display</button> · <button id="remLink" type="button">Daily reminder</button></p>
 </footer>
 
 <dialog id="privacyDlg" aria-labelledby="privH">
@@ -564,6 +567,18 @@ figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--r
     <button class="btn btn-plain" data-s="1.5rem" type="button">Extra large</button>
   </div>
   <form method="dialog" style="margin-top:14px"><button class="btn btn-leather">Done</button></form>
+</dialog>
+
+<dialog id="remDlg" aria-labelledby="remH">
+  <h2 id="remH">Daily reminder</h2>
+  <p class="legend" style="margin:0 0 8px">Pick a time and add it to your phone's calendar. It repeats every day and alerts you with a link back to this app. Nothing is sent anywhere, and you can delete the event from your calendar any time.</p>
+  <h3>What time?</h3>
+  <input type="time" id="remTime" value="07:00" style="font:inherit;font-size:1.2rem;padding:8px 10px;border:1px solid var(--rule,#b9a98a);border-radius:8px;background:var(--paper,#fff);color:inherit">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+    <button class="btn btn-leather" id="remAdd" type="button">Add to my calendar</button>
+  </div>
+  <p class="legend" id="remMsg" style="margin:10px 0 0" aria-live="polite"></p>
+  <form method="dialog" style="margin-top:14px"><button class="btn btn-plain">Close</button></form>
 </dialog>
 
 <dialog id="takeDlg" aria-labelledby="tkHead">
@@ -1170,7 +1185,7 @@ async function route(){
   lastHash=location.hash;lastReading=reading;pageLabel=staticLabel(p);
   if(p[0]==="bible"&&p[2]==="background")pageLabel="the background";
   if(reading){if(!prevReading&&prevLabel&&prevHash!==location.hash)RET={hash:prevHash,label:prevLabel};
-    if(!prevReading&&!/^#\/(plan|$)|^#\/bible\/?$|^#?$/.test(prevHash))planCtx=null}
+    if(!prevReading&&!/^#\/(plan|home|$)|^#\/bible\/?$|^#?$/.test(prevHash))planCtx=null}
   else{if(RET&&location.hash===RET.hash)restore=scrollMap[RET.hash];RET=null;planCtx=null}
   try{
     if(!p.length||p[0]==="home")return await showHome();
@@ -1559,11 +1574,33 @@ async function showChapter(id,n,v){
     $("tkInSave").onclick=()=>{saveTakeaway(c,$("tkInline").value);markDayDone(c.id,c.day);$("tkInMsg").textContent=`Saved. Day ${c.day} is done.`;$("tkInSave").textContent="Save takeaways";const b=$("tkInDone");if(b)b.remove();$("tkCard").querySelector("h3").textContent="Your takeaways"};
     const b=$("tkInDone");if(b)b.onclick=()=>{markDayDone(c.id,c.day);$("tkInMsg").textContent=`Day ${c.day} is done.`;b.remove();$("tkInSave").textContent="Save takeaways"};}
   wireVerseNotes($("reader"),{id,n,name:(id==="psalms"?"Psalm":b.name)});
+  markAssigned($("reader"),id,n);
   $("selBook").onchange=e=>location.hash="#/bible/"+e.target.value+"/1";
   $("selCh").onchange=e=>location.hash="#/bible/"+id+"/"+e.target.value;
   if(v)scrollToId("v"+v,"flash");else window.scrollTo(0,0);
 }
 
+/* highlight the whole of today's reading-plan assignment while reading it */
+function markAssigned(root,id,n){
+  if(!planCtx||!planCtx.ref)return;
+  let any=false;
+  for(const r of parseRefs(planCtx.ref)){
+    if(r.book!==id)continue;
+    const sc=r.ch,sv=r.v||1;
+    let ec=r.ch,ev=r.v||0;                       // whole chapter when no verse given
+    if(r.end){ec=r.end.ch;ev=r.end.v}
+    else if(r.v){ev=r.v}
+    if(n<sc||n>ec)continue;
+    root.querySelectorAll(".v").forEach(el=>{
+      const v=+el.dataset.v;
+      if(n===sc&&v<sv)return;
+      if(n===ec&&ev>0&&v>ev)return;
+      el.classList.add("assigned");any=true});
+  }
+  if(any){const c=planCtx,note=document.createElement("p");note.className="plannote";
+    note.textContent="Today's reading is highlighted · Day "+c.day+" of "+c.total+" · "+c.ref;
+    root.insertBefore(note,root.firstChild)}
+}
 /* ---------- Jesus' Ministry ---------- */
 const KINDCLS=k=>/heal/i.test(k)?"healing":/deliver/i.test(k)?"deliverance":/nature/i.test(k)?"nature":/rais/i.test(k)?"raising":/sign/i.test(k)?"sign":"";
 /* make miracle numbers (1–35) and sign letters (A–J) in the overview tables and footnote tappable */
@@ -1875,6 +1912,32 @@ $("installNow").onclick=async()=>{if(!deferredInstall)return;$("installDlg").clo
 if(matchMedia("(display-mode: standalone)").matches||navigator.standalone)$("installLink").hidden=true;
 function applySize(s){document.documentElement.style.setProperty("--read",s);document.querySelectorAll("#sizeBtns button").forEach(b=>{const on=b.dataset.s===s;b.classList.toggle("btn-leather",on);b.classList.toggle("btn-plain",!on)})}
 $("sizeLink").onclick=$("dispBtn").onclick=()=>$("sizeDlg").showModal();
+/* daily reminder: a repeating calendar event (.ics), made on this device */
+const RKEY="study-companion-reminder-time";
+const RSET="study-companion-reminder-set";
+function remFmt(t){const [h,m]=t.split(":").map(Number);return (h%12||12)+":"+String(m).padStart(2,"0")+(h<12?" AM":" PM")}
+function remShow(){
+  const set=lsGet(RSET,"");$("remTime").value=set||lsGet(RKEY,"07:00");
+  $("remMsg").textContent=set?"You've set a reminder for "+remFmt(set)+" every day. To change the time, first delete the old event in your calendar, then add a new one here.":"";
+  $("remAdd").textContent=set?"Add another reminder":"Add to my calendar";
+}
+$("remLink").onclick=()=>{remShow();$("remDlg").showModal()};
+$("remAdd").onclick=async()=>{
+  const t=($("remTime").value||"07:00");lsSet(RKEY,t);
+  const [hh,mm]=t.split(":"),pad=n=>String(n).padStart(2,"0"),d=new Date();
+  const day=d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());
+  const url=location.origin+location.pathname+"#/home";
+  const ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Study Companion//Daily reading//EN","CALSCALE:GREGORIAN","BEGIN:VEVENT",
+    "UID:daily-reading@study-companion","DTSTAMP:"+day+"T000000Z","DTSTART:"+day+"T"+hh+mm+"00","DURATION:PT15M",
+    "RRULE:FREQ=DAILY","SUMMARY:Time to read your Bible","DESCRIPTION:Open Study Companion and continue today's reading.\\n"+url,"URL:"+url,
+    "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:Time to read your Bible","TRIGGER:PT0S","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n");
+  const file=new File([ics],"daily-reading.ics",{type:"text/calendar"});
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"Daily reading reminder"});lsSet(RSET,t);$("remMsg").textContent="Choose Calendar to add it.";return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download="daily-reading.ics";document.body.appendChild(a);a.click();a.remove();
+  lsSet(RSET,t);$("remMsg").textContent="Open the downloaded file to add it to your calendar. Your reminder is set for "+remFmt(t)+" every day.";
+};
 const TKEY="study-companion-theme";
 function applyTheme(t){
   const root=document.documentElement;
