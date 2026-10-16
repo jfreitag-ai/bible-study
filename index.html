@@ -463,7 +463,7 @@ figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--r
     <div class="rule" aria-hidden="true">✝</div>
     <p>Your Bible study notebook</p>
   </div>
-  <button class="dispbtn" id="dispBtn" type="button" aria-label="Display settings" title="Display">Aa</button>
+  <button class="dispbtn" id="dispBtn" type="button" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/></svg></button>
 </header>
 <nav class="tabs leather" aria-label="Sections">
   <a href="#/home" id="tabHome" class="hometab" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg></a>
@@ -522,7 +522,7 @@ figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--r
 
 <footer>
   <p>Free to use. No sign-up, no ads, no tracking. Scripture: American Standard Version (1901), public domain.</p>
-  <p><button id="privacyLink" type="button">Privacy</button> · <button id="installLink" type="button">Add to your home screen</button> · <button id="sizeLink" type="button">Display</button> · <button id="remLink" type="button">Daily reminder</button></p>
+  <p><button id="privacyLink" type="button">Privacy</button> · <button id="installLink" type="button">Add to your home screen</button> · <button id="sizeLink" type="button">Settings</button></p>
 </footer>
 
 <dialog id="privacyDlg" aria-labelledby="privH">
@@ -548,14 +548,7 @@ figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--r
 </dialog>
 
 <dialog id="sizeDlg" aria-labelledby="sizeH">
-  <h2 id="sizeH">Display</h2>
-  <h3>Appearance</h3>
-  <div class="seg" id="themeBtns">
-    <button class="btn btn-plain" data-t="default" type="button"><span class="sw" aria-hidden="true"></span>Default</button>
-    <button class="btn btn-plain" data-t="light" type="button"><span class="sw" aria-hidden="true"></span>Light</button>
-    <button class="btn btn-plain" data-t="dark" type="button"><span class="sw" aria-hidden="true"></span>Dark</button>
-  </div>
-  <p class="legend" style="margin:0">Default is parchment. Light is soft grey, and Dark is easier on the eyes at night.</p>
+  <h2 id="sizeH">Settings</h2>
   <h3>Bible version</h3>
   <div class="seg" id="verBtns">
     <button class="btn btn-plain" data-ver="asv" type="button">ASV</button>
@@ -563,6 +556,13 @@ figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--r
     <button class="btn btn-plain" data-ver="kjv" type="button">KJV</button>
   </div>
   <p class="legend" style="margin:0" id="verNote"></p>
+  <h3>Appearance</h3>
+  <div class="seg" id="themeBtns">
+    <button class="btn btn-plain" data-t="default" type="button"><span class="sw" aria-hidden="true"></span>Default</button>
+    <button class="btn btn-plain" data-t="light" type="button"><span class="sw" aria-hidden="true"></span>Light</button>
+    <button class="btn btn-plain" data-t="dark" type="button"><span class="sw" aria-hidden="true"></span>Dark</button>
+  </div>
+  <p class="legend" style="margin:0">Default is parchment. Light is soft grey, and Dark is easier on the eyes at night.</p>
   <h3>Words of Jesus</h3>
   <div class="seg" id="wjBtns" style="grid-template-columns:1fr 1fr">
     <button class="btn btn-plain" data-w="on" type="button"><span class="woc-sample">In red</span></button>
@@ -575,6 +575,9 @@ figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--r
     <button class="btn btn-plain" data-s="1.3rem" type="button">Large</button>
     <button class="btn btn-plain" data-s="1.5rem" type="button">Extra large</button>
   </div>
+  <h3>Daily reminder</h3>
+  <p class="legend" style="margin:0 0 8px">Add a repeating reading reminder to your phone's calendar.</p>
+  <button class="btn btn-plain" id="remLink" type="button">Set a daily reminder…</button>
   <form method="dialog" style="margin-top:14px"><button class="btn btn-leather">Done</button></form>
 </dialog>
 
@@ -1053,7 +1056,7 @@ function flushChapterNote(){
 /* words of Jesus in red: it.wj holds [start,end] ranges in the verse text */
 /* notes about where the red letters are a judgment call */
 const WJNOTES={
-  "john/3":"<b>About the red letters in verses 16–21.</b> The Greek has no quotation marks, so no one can be sure where Jesus' words to Nicodemus end. Many red-letter Bibles, and the King James tradition followed here, keep verses 16–21 in red as Jesus still speaking. Many scholars read them as John's own reflection on Jesus' words, with the quotation ending at verse 15. Either way, they are Scripture: the question is only who is speaking. You can turn red letters off under Display (the Aa button)."
+  "john/3":"<b>About the red letters in verses 16–21.</b> The Greek has no quotation marks, so no one can be sure where Jesus' words to Nicodemus end. Many red-letter Bibles, and the King James tradition followed here, keep verses 16–21 in red as Jesus still speaking. Many scholars read them as John's own reflection on Jesus' words, with the quotation ending at verse 15. Either way, they are Scripture: the question is only who is speaking. You can turn red letters off under Settings (the gear at the top)."
 };
 function wjHtml(it){
   if(!it.wj||!it.wj.length)return esc(it.text);
@@ -1578,7 +1581,7 @@ async function showChapter(id,n,v){
       <p class="tkfoot">Takeaways are kept in <a href="#/notes">My Notes</a>.</p></section>`;}
   if(WJNOTES[id+"/"+n])h+=`<aside class="note wjnote">${WJNOTES[id+"/"+n]}</aside>`;
   h+=`<p class="legend vhint">Press and hold any verse to write your own note on it.</p>`;
-  if(ver!=="asv")h+=`<p class="legend">You are reading the ${esc(VERS[ver][1])}. Study notes and shaded verses are written for the ASV. Change the version under Display (the Aa button).</p>`;
+  if(ver!=="asv")h+=`<p class="legend">You are reading the ${esc(VERS[ver][1])}. Study notes and shaded verses are written for the ASV. Change the version under Settings (the gear at the top).</p>`;
   {const nm=encodeURIComponent((id==="psalms"?"Psalm":b.name)+" "+n);
    h+=`<p class="legend vlinks">Read this chapter in another version (opens Bible Gateway): ${["NIV","ESV","NLT","NKJV","NASB","CSB"].map(x=>`<a href="https://www.biblegateway.com/passage/?search=${nm}&version=${x}" target="_blank" rel="noopener">${x}</a>`).join(" · ")}</p>`;}
   h+=`<div class="mynotes"><label for="chNote">My notes on ${esc(b.name)} ${n} <span class="status" id="cnStatus"></span></label><textarea id="chNote" placeholder="Write what stands out to you, questions, prayers…">${esc(noteText(nk))}</textarea></div>`;
@@ -1941,7 +1944,7 @@ function remShow(){
   $("remMsg").textContent=set?"You've set a reminder for "+remFmt(set)+" every day. To change the time, first delete the old event in your calendar, then add a new one here.":"";
   $("remAdd").textContent=set?"Add another reminder":"Add to my calendar";
 }
-$("remLink").onclick=()=>{remShow();$("remDlg").showModal()};
+$("remLink").onclick=()=>{$("sizeDlg").close();remShow();$("remDlg").showModal()};
 $("remAdd").onclick=async()=>{
   const t=($("remTime").value||"07:00");lsSet(RKEY,t);
   const [hh,mm]=t.split(":"),pad=n=>String(n).padStart(2,"0"),d=new Date();
