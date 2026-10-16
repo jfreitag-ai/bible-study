@@ -131,6 +131,8 @@ nav.tabs .sm{display:none}
 .reader .v.pressing{background:var(--rose);box-shadow:0 0 0 3px var(--rose)}
 .reader .v.assigned{background:color-mix(in srgb,var(--rose-line) 42%,transparent);box-shadow:-4px 0 0 color-mix(in srgb,var(--rose-line) 42%,transparent),4px 0 0 color-mix(in srgb,var(--rose-line) 42%,transparent);box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .reader .v.assigned.flash{animation:none}
+.vmiss{font-style:italic;color:var(--muted);font-size:.9em}
+.vlinks a{white-space:nowrap}
 .plannote{margin:0 0 10px;padding:6px 10px;border-left:3px solid var(--ribbon);background:var(--rose);border-radius:0 6px 6px 0;font-size:.9rem}
 .reader .v.noted sup::after{content:"✎";margin-left:2px;font-size:.9em}
 button.note.mine{width:100%;text-align:left;cursor:pointer;color:var(--ink);font-weight:400;letter-spacing:0;background:var(--tint);border-left-color:var(--navy)}
@@ -554,6 +556,13 @@ figure img{max-width:100%;height:auto;border-radius:6px;border:1px solid var(--r
     <button class="btn btn-plain" data-t="dark" type="button"><span class="sw" aria-hidden="true"></span>Dark</button>
   </div>
   <p class="legend" style="margin:0">Default is parchment. Light is soft grey, and Dark is easier on the eyes at night.</p>
+  <h3>Bible version</h3>
+  <div class="seg" id="verBtns">
+    <button class="btn btn-plain" data-ver="asv" type="button">ASV</button>
+    <button class="btn btn-plain" data-ver="web" type="button">WEB</button>
+    <button class="btn btn-plain" data-ver="kjv" type="button">KJV</button>
+  </div>
+  <p class="legend" style="margin:0" id="verNote"></p>
   <h3>Words of Jesus</h3>
   <div class="seg" id="wjBtns" style="grid-template-columns:1fr 1fr">
     <button class="btn btn-plain" data-w="on" type="button"><span class="woc-sample">In red</span></button>
@@ -765,6 +774,9 @@ const getIndex=()=>getJSON("index");
 const allBooks=idx=>(idx.otBooks||[]).concat(idx.books);
 let testament=lsGet("study-companion-testament","nt");
 const getBook=id=>getJSON(id);
+const VKEY="study-companion-version",VERS={asv:["ASV","American Standard Version (1901)"],web:["WEB","World English Bible, a modern English translation"],kjv:["KJV","King James Version"]};
+let bibleVer=lsGet(VKEY,"asv");if(!VERS[bibleVer])bibleVer="asv";
+const getVer=(v,id)=>getJSON("ver/"+v+"/"+id);
 async function versesFor(r){
   const b=await getBook(r.book);const out=[];
   const endCh=r.end?r.end.ch:r.ch;
@@ -1420,7 +1432,7 @@ async function runSearch(q){
   if(direct.length)h+=`<p>${direct.map(r=>`<a class="btn btn-leather btn-small" href="${refHref(r)}">Open ${esc(r.label)}</a>`).join(" ")}</p>`;
   if(people.length)h+=`<div class="eyebrow">People</div><div class="az">${people.map(p=>`<a class="chip" href="#/whoswho/${p.id}">${esc(p.name)}</a>`).join("")}</div>`;
   if(tix.length)h+=`<div class="eyebrow">Topics</div><div class="az">${tix.map(t=>`<a class="chip" href="#/plan/t-${slug(t.name)}">${esc(t.name)}</a>`).join("")}</div>`;
-  h+=`<div class="eyebrow">${hits.length?hits.length.toLocaleString()+" verse"+(hits.length===1?"":"s"):"No verses found"}${hits.length>150?" · showing the first 150":""}</div><div class="results">`;
+  h+=`<div class="eyebrow">${hits.length?hits.length.toLocaleString()+" verse"+(hits.length===1?"":"s"):"No verses found"}${hits.length>150?" · showing the first 150":""} · searching the ASV</div><div class="results">`;
   h+=hits.slice(0,150).map(x=>`<a class="res" href="#/bible/${x.b.id}/${x.c}/${x.v}"><span class="ref">${esc(x.b.name)} ${x.c}:${x.v}</span>${mark(x.text)}</a>`).join("");
   box.innerHTML=h+"</div>";
 }
@@ -1511,7 +1523,12 @@ async function showBackground(id){
 async function showChapter(id,n,v){
   loadingView("chapter",{tab:"bible",slim:true,reading:true});
   const [idx,d]=await Promise.all([getIndex(),getBook(id)]);
-  const ALLB=allBooks(idx);const b=ALLB.find(x=>x.id===id);const c=d.chapters.find(x=>x.n===n);const isOT=b&&b.testament==="ot";
+  const ALLB=allBooks(idx);const b=ALLB.find(x=>x.id===id);let c=d.chapters.find(x=>x.n===n);const isOT=b&&b.testament==="ot";
+  const ver=bibleVer;
+  if(c&&ver!=="asv"){
+    let VT=null;try{VT=await getVer(ver,id)}catch(e){}
+    if(VT){const cv=VT[n]||{};c={...c,items:c.items.map(it=>{if(it.t!=="v")return it;const x=cv[it.n];return x?{...it,text:x[0],wj:x[1]||null}:{...it,text:"",wj:null,missing:true}})}}
+  }
   if(!b||!c){ntv.innerHTML='<div class="empty"><h2>Chapter not found</h2><p><a href="#/bible">Back to the Study Bible</a></p></div>';return}
   lsSet(LKEY,{id,n,name:(id==="psalms"?"Psalm":b.name),at:Date.now(),plan:planCtx});
   const names=idx.whoswho||{};
@@ -1540,7 +1557,7 @@ async function showChapter(id,n,v){
     if(it.t==="h"){endPara();h+=`<h3 class="sec">${esc(it.text)}<small>${esc(it.range)}</small></h3>`;continue}
     startPara();
     const myv=noteText(`${id}/${n}/${it.n}`);
-    h+=`<span class="v${it.shaded?" pro":""}${myv?" noted":""}" id="v${it.n}" data-v="${it.n}"><sup>${it.n}</sup>${wjHtml(it)}</span>`;
+    h+=`<span class="v${it.shaded?" pro":""}${myv?" noted":""}" id="v${it.n}" data-v="${it.n}"><sup>${it.n}</sup>${it.missing?`<span class="vmiss">[Not in the ${VERS[ver][0]} text]</span>`:wjHtml(it)}</span>`;
     if(myv)h+=`<button type="button" class="note mine" data-v="${it.n}"><b class="lab">✎ My note</b>${esc(myv.length>220?myv.slice(0,220)+"…":myv).replace(/\n/g,"<br>")}</button>`;
     if(it.tags)h+=it.tags.map(t=>{const mm=t.match(/^Miracle\s+(\d+)/);return `<a class="tag" href="${mm?"#/ministry/m-"+mm[1]:whoLink(t)}">${esc(t.replace(/^Who.s Who:\s*/,""))}</a>`}).join("");
     h+=" ";
@@ -1561,6 +1578,9 @@ async function showChapter(id,n,v){
       <p class="tkfoot">Takeaways are kept in <a href="#/notes">My Notes</a>.</p></section>`;}
   if(WJNOTES[id+"/"+n])h+=`<aside class="note wjnote">${WJNOTES[id+"/"+n]}</aside>`;
   h+=`<p class="legend vhint">Press and hold any verse to write your own note on it.</p>`;
+  if(ver!=="asv")h+=`<p class="legend">You are reading the ${esc(VERS[ver][1])}. Study notes and shaded verses are written for the ASV. Change the version under Display (the Aa button).</p>`;
+  {const nm=encodeURIComponent((id==="psalms"?"Psalm":b.name)+" "+n);
+   h+=`<p class="legend vlinks">Read this chapter in another version (opens Bible Gateway): ${["NIV","ESV","NLT","NKJV","NASB","CSB"].map(x=>`<a href="https://www.biblegateway.com/passage/?search=${nm}&version=${x}" target="_blank" rel="noopener">${x}</a>`).join(" · ")}</p>`;}
   h+=`<div class="mynotes"><label for="chNote">My notes on ${esc(b.name)} ${n} <span class="status" id="cnStatus"></span></label><textarea id="chNote" placeholder="Write what stands out to you, questions, prayers…">${esc(noteText(nk))}</textarea></div>`;
   const bi=ALLB.findIndex(x=>x.id===id);
   const prev=n>1?[`#/bible/${id}/${n-1}`,`${b.name} ${n-1}`]:(bi>0?[`#/bible/${ALLB[bi-1].id}/${ALLB[bi-1].verses.length}`,`${ALLB[bi-1].name} ${ALLB[bi-1].verses.length}`]:null);
@@ -1952,6 +1972,13 @@ function applyWJ(on){
 }
 document.querySelectorAll("#wjBtns button").forEach(b=>b.onclick=()=>{const on=b.dataset.w==="on";lsSet("study-companion-redletter",on);applyWJ(on)});
 applyWJ(lsGet("study-companion-redletter",true)!==false);
+function applyVer(v){
+  bibleVer=v;
+  document.querySelectorAll("#verBtns button").forEach(b=>{const on=b.dataset.ver===v;b.classList.toggle("btn-leather",on);b.classList.toggle("btn-plain",!on);b.setAttribute("aria-pressed",on)});
+  $("verNote").textContent=(v==="asv"?"":"Reading the "+VERS[v][1]+". ")+"Study notes, shaded verses and Bible search stay with the ASV. Verse notes you write stay with the verse in any version.";
+}
+document.querySelectorAll("#verBtns button").forEach(b=>b.onclick=()=>{const v=b.dataset.ver;lsSet(VKEY,v);applyVer(v);if(/^#\/bible\/[^/]+\/\d/.test(location.hash))route()});
+applyVer(bibleVer);
 document.querySelectorAll("#sizeBtns button").forEach(b=>b.onclick=()=>{lsSet(ZKEY,b.dataset.s);applySize(b.dataset.s)});
 applySize(lsGet(ZKEY,"1.12rem"));
 
